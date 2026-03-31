@@ -1,4 +1,4 @@
 package com.sheepfold.personalaiworkspaceagent.tools.dto;
 
-public record ToolsAskRequest(String question) {
+public record ToolsAskRequest(String question, String sessionId) {
 }

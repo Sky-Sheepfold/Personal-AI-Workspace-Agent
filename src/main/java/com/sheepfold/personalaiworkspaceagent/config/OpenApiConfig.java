@@ -34,4 +34,12 @@ public class OpenApiConfig {
                 .pathsToMatch("/api/tools/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi memoryGroupedOpenApi() {
+        return GroupedOpenApi.builder()
+                .group("memory")
+                .pathsToMatch("/api/memory/**")
+                .build();
+    }
 }

@@ -28,13 +28,21 @@ public class ToolsController {
     @PostMapping("/ask")
     @Operation(summary = "工具调用问答", description = "仅触发工具调用，不走 RAG")
     public Map<String, Object> ask(@RequestBody ToolsAskRequest request) {
+        String question = request == null ? null : request.question();
+        String sessionId = request == null ? null : request.sessionId();
+
         if (request == null) {
             log.warn("/api/tools/ask 收到空请求体");
         } else {
-            log.info("/api/tools/ask 请求: questionLength={}",
-                    request.question() == null ? 0 : request.question().length());
+            log.info("/api/tools/ask 请求: sessionId={}, questionLength={}",
+                    sessionId,
+                    question == null ? 0 : question.length());
         }
-        String answer = toolCallingService.ask(request == null ? null : request.question());
-        return Map.of("answer", answer);
+
+        ToolCallingService.ToolCallingResult result = toolCallingService.ask(sessionId, question);
+        return Map.of(
+                "sessionId", result.sessionId(),
+                "memorySize", result.memorySize(),
+                "answer", result.answer());
     }
 }
