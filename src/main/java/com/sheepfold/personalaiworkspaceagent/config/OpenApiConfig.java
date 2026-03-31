@@ -13,10 +13,10 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI personalAiWorkspaceOpenApi() {
         return new OpenAPI().info(new Info()
-                .title("Personal AI Workspace Agent API")
-                .description("MVP RAG and vector debug APIs")
+                .title("个人 AI 工作台智能体接口文档")
+                .description("MVP RAG 与向量调试接口")
                 .version("v1")
-                .contact(new Contact().name("Personal AI Workspace Agent")));
+                .contact(new Contact().name("个人 AI 工作台智能体")));
     }
 
     @Bean
