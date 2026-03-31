@@ -3,6 +3,7 @@ package com.sheepfold.personalaiworkspaceagent.rag;
 import org.springframework.ai.chroma.vectorstore.ChromaApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -116,6 +117,68 @@ public class ChromaDebugService {
                 "offset", resolvedOffset,
                 "returned", items.size(),
                 "items", items);
+    }
+
+    public Map<String, Object> deleteVectorsBySourceFileName(String sourceFileName) {
+        if (!StringUtils.hasText(sourceFileName)) {
+            throw new IllegalArgumentException("sourceFileName must not be blank");
+        }
+
+        ChromaApi.Collection collection = chromaApi.getCollection(tenantName, databaseName, collectionName);
+        if (collection == null) {
+            return Map.of(
+                    "tenant", tenantName,
+                    "database", databaseName,
+                    "collection", collectionName,
+                    "sourceFileName", sourceFileName,
+                    "deleted", 0,
+                    "totalBefore", 0,
+                    "totalAfter", 0,
+                    "deleteStatus", 404);
+        }
+
+        Map<String, Object> where = Map.of(LlamaParseDocumentLoader.SOURCE_FILE_NAME_METADATA_KEY, sourceFileName);
+
+        Long totalBefore = chromaApi.countEmbeddings(tenantName, databaseName, collection.id());
+        long before = totalBefore == null ? 0 : totalBefore;
+
+        ChromaApi.GetEmbeddingsRequest previewRequest = new ChromaApi.GetEmbeddingsRequest(
+                null,
+                where,
+                50,
+                0,
+                List.of(ChromaApi.QueryRequest.Include.METADATAS));
+        ChromaApi.GetEmbeddingResponse previewResponse = chromaApi.getEmbeddings(
+                tenantName,
+                databaseName,
+                collection.id(),
+                previewRequest);
+
+        List<String> previewIds = previewResponse.ids() == null ? List.of() : previewResponse.ids();
+
+        int statusCode = chromaApi.deleteEmbeddings(
+                tenantName,
+                databaseName,
+                collection.id(),
+                new ChromaApi.DeleteEmbeddingsRequest(null, where));
+
+        Long totalAfter = chromaApi.countEmbeddings(tenantName, databaseName, collection.id());
+        long after = totalAfter == null ? 0 : totalAfter;
+        long deleted = Math.max(0, before - after);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("tenant", tenantName);
+        result.put("database", databaseName);
+        result.put("collection", collection.name() == null ? "" : collection.name());
+        result.put("collectionId", collection.id() == null ? "" : collection.id());
+        result.put("sourceFileName", sourceFileName);
+        result.put("matchedPreviewCount", previewIds.size());
+        result.put("matchedPreviewIds", previewIds.size() <= 20 ? previewIds : previewIds.subList(0, 20));
+        result.put("deleteStatus", statusCode);
+        result.put("totalBefore", before);
+        result.put("totalAfter", after);
+        result.put("deleted", deleted);
+        return result;
     }
 
     private List<Float> toPreview(float[] embedding, int maxSize) {
