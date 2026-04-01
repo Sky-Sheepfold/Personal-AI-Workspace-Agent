@@ -14,7 +14,7 @@ public class OpenApiConfig {
     public OpenAPI personalAiWorkspaceOpenApi() {
         return new OpenAPI().info(new Info()
                 .title("个人 AI 工作台智能体接口文档")
-                .description("MVP RAG、工具调用与向量调试接口")
+                .description("MVP RAG、工具调用、记忆与超级智能体接口")
                 .version("v1")
                 .contact(new Contact().name("个人 AI 工作台智能体")));
     }
@@ -40,6 +40,14 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("memory")
                 .pathsToMatch("/api/memory/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi agentGroupedOpenApi() {
+        return GroupedOpenApi.builder()
+                .group("agent")
+                .pathsToMatch("/api/agent/**")
                 .build();
     }
 }
